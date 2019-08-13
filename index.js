@@ -2,7 +2,7 @@
 
 var Service, Characteristic;
 
-const Gpio = require('pigpio').Gpio;
+const gpio = require('rpi-gpio')
 const converter = require('color-convert');
 
 module.exports = function(homebridge) {
@@ -24,9 +24,14 @@ function SmartLedStripAccessory(log, config) {
   if (!this.gPin) throw new Error("You must provide a config value for greenPin.");
   if (!this.bPin) throw new Error("You must provide a config value for bluePin.");
 
-  this.rLeds = new Gpio(this.rPin, {mode: Gpio.OUTPUT});
-  this.gLeds = new Gpio(this.gPin, {mode: Gpio.OUTPUT});
-  this.bLeds = new Gpio(this.bPin, {mode: Gpio.OUTPUT});
+  gpio.setMode('mode_bcm');
+  gpio.setup(this.rPin, gpio.DIR_OUT, setupCallback);
+  gpio.setup(this.gPin, gpio.DIR_OUT, setupCallback);
+  gpio.setup(this.bPin, gpio.DIR_OUT, setupCallback);
+}
+
+function setupCallback(err) {
+  if (err) throw err;
 }
 
 SmartLedStripAccessory.prototype = {
@@ -102,9 +107,9 @@ SmartLedStripAccessory.prototype = {
   updateRGB : function(red, green, blue)
   {
       this.log("Setting rgb values to: Red: "+red + " Green: "+green+ " Blue: "+blue);
-      this.rLeds.pwmWrite(red);
-      this.gLeds.pwmWrite(green);
-      this.bLeds.pwmWrite(blue);
+      gpio.write(this.rPin, red, function(err) { if (err) throw err; });
+      gpio.write(this.gPin, green, function(err) { if (err) throw err; });
+      gpio.write(this.bPin, blue, function(err) { if (err) throw err; });
   }
 
 }
